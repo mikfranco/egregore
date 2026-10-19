@@ -3,6 +3,11 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
+if [ ! -f "$ROOT_DIR/bin/capability-distribution.mjs" ]; then
+  echo "SKIP: capability distribution engine is not distributed"
+  exit 0
+fi
+
 node "$ROOT_DIR/bin/capability-distribution.mjs" runtime-skill-audit \
   --root "$ROOT_DIR" --strict-contract >/dev/null
 

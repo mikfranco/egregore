@@ -21,9 +21,7 @@
         "shell_contracts": [
           "Strict shell contracts"
         ],
-        "multiplayer": [
-          "multiplayer-poc-tests"
-        ],
+        "multiplayer": [],
         "artifacts": [
           "artifacts-tests"
         ]
@@ -49,25 +47,13 @@
         "api_postgres"
       ],
       "jobs": {
-        "api_core": [
-          "test"
-        ],
-        "api_emissary": [
-          "Emissary CLI (Node 18)",
-          "Emissary CLI (Node 22)",
-          "Exact-SHA respond-loop proof",
-          "MCP resource server",
-          "Handoff schema and publication contracts"
-        ],
-        "api_site": [
-          "Emissary site routing and build"
-        ],
+        "api_core": [],
+        "api_emissary": [],
+        "api_site": [],
         "api_postgres": [
           "Emissary PostgreSQL 16 proofs"
         ],
-        "api_image": [
-          "API production image"
-        ]
+        "api_image": []
       }
     },
     "shellcheck": {

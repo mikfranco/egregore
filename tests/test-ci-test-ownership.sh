@@ -197,63 +197,47 @@ check("repository exclusions are exactly the manifest set",
 result = run(source, exclude=False)
 check("repository default retains every shell suite", result.returncode == 0 and result.stdout.splitlines() == corpus(source))
 
-# Convenience groups must stay outside discovery; their leaves keep strict
-# owners. Run the real group against cheap sentinel leaves to verify relocation
-# and failure propagation without executing the expensive suites again.
-loom_leaves = ["bin/tests/" + name for name in (
-    "test-loom.sh", "test-loom-truth.sh", "test-loom-evals.sh",
-    "test-loom-learner.sh", "test-loom-replay.sh", "test-loom-scenarios.sh",
-    "test-loom-dashboard.sh",
-)]
-group = "bin/test-groups/loom-matrix.sh"
-check("Loom convenience group is outside shell-suite discovery",
-      (source / group).is_file() and group not in corpus(source)
-      and not (source / "bin/tests/test-loom-matrix.sh").exists())
-workflow = (source / ".github/workflows/ci.yml").read_text()
-check("each Loom leaf has one strict owner and one direct CI invocation",
-      all([entry for entry in real_manifest["excluded_from_baseline"] if entry["suite"] == suite]
-          == [{"suite": suite, "workflow": ".github/workflows/ci.yml", "job": "shell-contracts"}]
-          and len(re.findall(r"^\s*run: bash " + re.escape(suite) + r"$", workflow, re.M)) == 1
-          for suite in loom_leaves))
-with tempfile.TemporaryDirectory(prefix="test-loom-group.") as temporary:
-    root = Path(temporary)
-    (root / "bin/test-groups").mkdir(parents=True)
-    (root / "bin/tests").mkdir()
-    shutil.copyfile(source / group, root / group)
-    for suite in loom_leaves:
-        (root / suite).write_text(f"printf '%s\\n' 'LEAF:{suite}'\n")
-    result = subprocess.run(["bash", str(root / group)], cwd=root / "bin",
-                            text=True, capture_output=True, timeout=10)
-    check("relocated Loom group invokes every leaf once from another directory",
-          result.returncode == 0 and [line for line in result.stdout.splitlines() if line.startswith("LEAF:")]
-          == ["LEAF:" + suite for suite in loom_leaves])
-    (root / loom_leaves[1]).write_text("exit 37\n")
-    result = subprocess.run(["bash", str(root / group)], cwd=root / "bin",
-                            text=True, capture_output=True, timeout=10)
-    check("relocated Loom group fails on the first failing leaf",
-          result.returncode == 37 and [line for line in result.stdout.splitlines() if line.startswith("LEAF:")]
-          == ["LEAF:" + loom_leaves[0]])
+# Validate literal local entrypoints in every shipped workflow, not just suites
+# excluded from baseline. This catches public-export pruning regressions.
+def missing_references(root, text):
+    references = re.findall(r"(?:working-directory:|cache-dependency-path:)\s+([\w./-]+)", text)
+    references += re.findall(r"\bbash\s+((?:bin|tests)/[\w./-]+\.sh)\b", text)
+    references += re.findall(r"\b((?:packages|api|site|threads)/[\w./-]+)", text)
+    references += re.findall(r"\b(tests/[\w./-]+\.py)\b", text)
+    return sorted({path for path in references if not (root / path).exists()})
 
-result = run(source)
-check("baseline retains canonical release and unique queue suites once",
-      result.returncode == 0 and result.stdout.splitlines().count("bin/tests/test-release-candidate.sh") == 1
-      and result.stdout.splitlines().count("tests/test-release-queue.sh") == 1
-      and not (source / "tests/test-release-candidate.sh").exists())
-with tempfile.TemporaryDirectory(prefix="test-release-queue-owner.") as temporary:
+for workflow in sorted((source / ".github/workflows").glob("*.yml")):
+    missing = missing_references(source, workflow.read_text())
+    check(f"{workflow.name} local CI entrypoints exist", not missing, str(missing))
+with tempfile.TemporaryDirectory(prefix="test-public-ci-references.") as temporary:
     root = Path(temporary)
-    for directory in ("tests", "bin/tests", "mock-bin"):
-        (root / directory).mkdir(parents=True)
-    shutil.copyfile(source / "tests/test-release-queue.sh", root / "tests/test-release-queue.sh")
-    (root / "bin/tests/test-release-candidate.sh").write_text("exit 97\n")
-    node = root / "mock-bin/node"
-    node.write_text("#!/bin/sh\nprintf '%s\\n' \"$@\"\n")
-    node.chmod(0o755)
-    result = subprocess.run(["bash", str(root / "tests/test-release-queue.sh")], cwd=root,
-                            env={**os.environ, "PATH": str(node.parent) + os.pathsep + os.environ["PATH"]},
-                            text=True, capture_output=True, timeout=10)
-    check("release queue invokes its unique Node suite without repeating the canonical shell suite",
-          result.returncode == 0 and result.stdout.splitlines()
-          == ["--test", str(root / "bin/tests/release-queue.test.mjs")])
+    for text in ("run: bash bin/tests/test-missing.sh",
+                 "working-directory: packages/missing",
+                 "cache-dependency-path: packages/missing/package-lock.json",
+                 "run: npm --prefix packages/missing run test"):
+        check("absent CI entrypoint is rejected: " + text, bool(missing_references(root, text)))
+
+# Required evidence must refer to jobs that still exist in the public workflow.
+workflow = (source / ".github/workflows/ci.yml").read_text()
+jobs = set(re.findall(r"^  ([\w-]+):$", workflow.split("jobs:\n", 1)[1], re.M))
+aggregate = workflow.split("  full-result:\n", 1)[1]
+needs = set(re.findall(r"^      - ([\w-]+)$", aggregate, re.M))
+check("full result requires exactly the distributed owners", needs == jobs - {"full-result"})
+policy = json.loads((source / ".github/ci-policy.json").read_text())
+check("package-only Emissary evidence is pruned from routing policy",
+      policy["workflows"]["api"]["jobs"]["api_emissary"] == [])
+nightly = (source / ".github/workflows/nightly-ci.yml").read_text()
+check("nightly resolves and dispatches the repository default branch",
+      'branch = os.environ["DEFAULT_BRANCH"]' in nightly
+      and 'heads/{branch}' in nightly and 'f"ref={branch}"' in nightly
+      and 'develop' not in nightly)
+
+settings = json.loads((source / ".claude/settings.json").read_text())
+for event, entries in settings["hooks"].items():
+    for entry in entries:
+        for hook in entry.get("hooks", []):
+            paths = re.findall(r'bin/[\w./-]+\.(?:sh|js|mjs)', hook.get("command", ""))
+            check(f"{event} hook entrypoints exist", all((source / path).is_file() for path in paths), str(paths))
 print(f"Results: {passed} passed, {failed} failed")
 raise SystemExit(1 if failed else 0)
 PY

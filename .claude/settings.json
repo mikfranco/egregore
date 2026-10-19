@@ -108,15 +108,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/bin/loom.sh actuals --quiet"
-          }
-        ]
-      },
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR\"/bin/session-autosave.sh"
           }
         ]

@@ -305,9 +305,9 @@ Always use HTTPS for git operations — `github-auth.sh` handles credential stor
 
 ---
 
-## Loom Routing
+## Collaboration
 
-Loom is Claude-specific; skip its preambles and `bin/loom.sh` calls. Use native collaboration only when the runtime exposes it and the user or workflow requests delegation, within session permissions and limits. Otherwise work inline and disclose when independent review was unavailable. `loom/` and `.claude/agents/` remain Claude framework files.
+Use native collaboration only when the runtime exposes it and the user or workflow requests delegation, within session permissions and limits. Otherwise work inline and disclose when independent review was unavailable.
 
 ---
 

@@ -64,7 +64,7 @@ grep -q 'runtime exposes it' "$block_file"
 grep -q 'user or workflow requests delegation' "$block_file"
 grep -q 'within session permissions and limits' "$block_file"
 grep -q 'Otherwise work inline and disclose when independent review was unavailable' "$block_file"
-grep -q 'skip its preambles and `bin/loom.sh` calls' "$block_file"
+! grep -q 'bin/loom.sh' "$block_file"
 grep -q 'structured question tooling when available and permitted' "$block_file"
 grep -q 'Wait for answers before dependent work' "$block_file"
 

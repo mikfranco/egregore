@@ -15,6 +15,11 @@ if [ "$#" -gt 0 ]; then
   fi
   ROOT="$(cd "$2" && pwd)"
 fi
+# An explicitly supplied fixture must still fail on missing bundle trees.
+if [ "$#" -eq 0 ] && [ ! -d "$ROOT/packages/create-egregore" ]; then
+  echo "SKIP: runtime bundles are not distributed"
+  exit 0
+fi
 BUNDLES=(claude codex pi prime)
 PASS=0; FAIL=0
 ALL_REFS=""

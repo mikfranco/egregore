@@ -7,6 +7,11 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# These proofs remain available when a distribution includes the API migrations.
+if [ ! -d "$repo_root/api/migrations" ]; then
+  echo "SKIP: API migrations are not distributed"
+  exit 0
+fi
 pg_container="egregore-handle-pg16-$$"
 pg_password="handle-proof-only"
 proof_tmp="$(mktemp -d)"

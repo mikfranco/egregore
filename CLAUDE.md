@@ -341,17 +341,9 @@ Never repeat it.
 
 Always use HTTPS for git operations — `github-auth.sh` handles credential storage.
 
-## Loom Routing
+## Collaboration
 
-`loom/routes.json` routes commands across model tiers: Fable deliberates,
-cheaper executors run mechanical commands via the `loom-executor` agent.
-Delegate-routed skills carry a "Loom routing" preamble — follow it: resolve
-the route with `bin/loom.sh route <command>`, honor user depth cues ("deep",
-"think hard", `--deep` force inline frontier), print the model footer on every
-routed output, and on `LOW_CONFIDENCE` either take over inline (interaction
-needs) or escalate one tier (uncertainty). Full spec:
-`.claude/context/loom.md`. Org route overrides live under a `loom` key in
-`egregore.json`.
+Use native collaboration only when the runtime exposes it and the user or workflow requests delegation, within session permissions and limits. Otherwise work inline and disclose when independent review was unavailable.
 
 ## Git Workflow
 

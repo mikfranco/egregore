@@ -3,6 +3,12 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 migration_root="${EMISSARY_MIGRATION_ROOT:-$repo_root/api/migrations}"
+# Keep externally supplied migration fixtures strict; only an omitted public
+# API tree is an unavailable optional proof.
+if [ -z "${EMISSARY_MIGRATION_ROOT:-}" ] && [ ! -d "$migration_root" ]; then
+  echo "SKIP: API migrations are not distributed"
+  exit 0
+fi
 container_name="eg-donation-ingestion-pg16-${RANDOM}-${RANDOM}"
 proof_tmp="$(mktemp -d)"
 

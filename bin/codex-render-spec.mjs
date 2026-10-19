@@ -270,7 +270,6 @@ Use structured question tooling when available and permitted; otherwise render c
 
 **Rules:** Max 4 questions per batch. When choices aren't mutually exclusive, say "pick any that apply".`;
 
-const LOOM_ROUTING_BODY = `Loom is Claude-specific; skip its preambles and \`bin/loom.sh\` calls. Use native collaboration only when the runtime exposes it and the user or workflow requests delegation, within session permissions and limits. Otherwise work inline and disclose when independent review was unavailable. \`loom/\` and \`.claude/agents/\` remain Claude framework files.`;
 
 const ISOLATION_BODY = `Sessions are confined to this project + memory + managed repos, with a **two-tier boundary** — a hard wall between Egregore instances, a consent gate for everything else. On Codex the boundary is a standing instruction, not an enforced hook — hold it yourself.
 
@@ -329,11 +328,7 @@ const RULES = {
   'Onboarding': { action: 'keep', note: 'Kept; /onboarding rendered as $onboarding.' },
   'Transparency Beat': { action: 'keep', note: 'Kept verbatim.' },
   'Memory': { action: 'keep', note: 'Kept verbatim.' },
-  'Loom Routing': {
-    action: 'replace',
-    body: LOOM_ROUTING_BODY,
-    note: 'Native collaboration is conditional on exposed capabilities, workflow intent, and session permissions. Claude-only Loom calls stay excluded; inline fallback reports lost independence.',
-  },
+  'Collaboration': { action: 'keep', note: 'Runtime-native collaboration follows session capabilities and permissions.' },
   'Git Workflow': {
     action: 'keep',
     note: 'Kept; slash tokens rendered as $skill tokens. Branch diagram unchanged (code fence).',

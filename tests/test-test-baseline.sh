@@ -7,6 +7,12 @@ unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OB
 # Exit 0 = all cases passed, Exit 1 = a case failed
 
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+# The public export does not include the revision-comparison engine. Keep its
+# integration proofs available for distributions that ship that engine.
+if [ ! -f "$SCRIPT_DIR/bin/test-baseline.sh" ]; then
+  echo "SKIP: revision-comparison engine is not distributed"
+  exit 0
+fi
 PASS=0
 FAIL=0
 pass() { PASS=$((PASS + 1)); echo "  PASS: $1"; }

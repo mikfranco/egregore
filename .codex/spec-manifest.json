@@ -81,10 +81,10 @@
       "note": "Kept verbatim."
     },
     {
-      "section": "Loom Routing",
-      "action": "replace",
-      "sourceHash": "b6a6ca2bc2b7",
-      "note": "Native collaboration is conditional on exposed capabilities, workflow intent, and session permissions. Claude-only Loom calls stay excluded; inline fallback reports lost independence."
+      "section": "Collaboration",
+      "action": "keep",
+      "sourceHash": "ccc48951f195",
+      "note": "Runtime-native collaboration follows session capabilities and permissions."
     },
     {
       "section": "Git Workflow",
